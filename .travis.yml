@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t calvincolton/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run calvincolton/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t calvincolton/multi-client ./client
+  - docker build -t calvincolton/multi-nginx ./nginx
+  - docker build -t calvincolton/multi-server ./server
+  - docker build -t calvincolton/multi-worker ./worker
+  # Log in to docker CLI
+  - ehco "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # take above images and push to docker hub
+  - docker push calvincolton/multi-client
+  - docker push calvincolton/multi-nginx
+  - docker push calvincolton/multi-server
+  - docker push calvincolton/multi-worker
